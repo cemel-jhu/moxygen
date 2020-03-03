@@ -19,75 +19,86 @@ var markdown = require('./markdown');
 module.exports = {
 
   // Loaded templates
-  templates: {},
+  templates : {},
 
   // Load templates from the given directory
-  load: function (templateDirectory) {
-    fs.readdirSync(templateDirectory).forEach(function (filename) {
+  load : function(templateDirectory) {
+    fs.readdirSync(templateDirectory).forEach(function(filename) {
       var fullname = path.join(templateDirectory, filename);
-      var template = handlebars.compile(fs.readFileSync(fullname, 'utf8'), {
-        noEscape: true,
-        strict: true
-      });
+      var template = handlebars.compile(fs.readFileSync(fullname, 'utf8'),
+                                        {noEscape : true, strict : true});
       this.templates[filename.match(/(.*)\.md$/)[1]] = template;
     }.bind(this));
   },
 
-  render: function (compound) {
+  render : function(compound) {
     var template;
 
     log.verbose('Rendering ' + compound.kind + ' ' + compound.fullname);
 
     switch (compound.kind) {
-      case 'index':
-        template = 'index';
-        break;
-      case 'page':
-        template = 'page'
-        break;
-      case 'group':
-      case 'namespace':
-        if (Object.keys(compound.compounds).length === 1
-          && compound.compounds[Object.keys(compound.compounds)[0]].kind == 'namespace') {
-          return undefined;
-        }
-        template = 'namespace';
-        break;
-      case 'class':
-      case 'struct':
-        template = 'class';
-        break;
-      default:
-        log.warn('Cannot render ' + compound.kind + ' ' + compound.fullname);
-        console.log('Skipping ', compound);
+    case 'index':
+      template = 'index';
+      break;
+    case 'page':
+      template = 'page'
+      break;
+    case 'group':
+    case 'namespace':
+      if (Object.keys(compound.compounds).length === 1 &&
+          compound.compounds[Object.keys(compound.compounds)[0]].kind ==
+              'namespace') {
         return undefined;
+      }
+      template = 'namespace';
+      break;
+    case 'class':
+    case 'struct':
+      template = 'class';
+      break;
+    default:
+      log.warn('Cannot render ' + compound.kind + ' ' + compound.fullname);
+      console.log('Skipping ', compound);
+      return undefined;
     }
-    
-    return this.templates[template](compound).replace(/(\r\n|\r|\n){3,}/g, '$1\n');
+
+    return this.templates[template](compound).replace(/(\r\n|\r|\n){3,}/g,
+                                                      '$1\n');
   },
 
-  renderArray: function (compounds) {
-    return compounds.map(function(compound) {
-      return this.render(compound);
-    }.bind(this));
+  renderArray : function(compounds) {
+    return compounds.map(
+        function(compound) { return this.render(compound); }.bind(this));
   },
 
   // Register handlebars helpers
-  registerHelpers: function (options) {
-
+  registerHelpers : function(options) {
     // Escape the code for a table cell.
     handlebars.registerHelper('cell', function(code) {
       return code.replace(/\|/g, '\\|').replace(/\n/g, '<br/>');
     });
 
     // Escape the code for a titles.
-    handlebars.registerHelper('title', function(code) {
-      return code.replace(/\n/g, '<br/>');
-    });
+    handlebars.registerHelper(
+        'title', function(code) { return code.replace(/\n/g, '<br/>'); });
 
     // Generate an anchor for internal links
-    handlebars.registerHelper('anchor', function(name) {
-      return helpers.getAnchor(name, options);
+    handlebars.registerHelper(
+        'anchor', function(name) { return helpers.getAnchor(name, options); });
+    handlebars.registerHelper({
+      eq : function(v1, v2) { return v1 === v2; },
+      ne : function(v1, v2) { return v1 !== v2; },
+      lt : function(v1, v2) { return v1 < v2; },
+      gt : function(v1, v2) { return v1 > v2; },
+      lte : function(v1, v2) { return v1 <= v2; },
+      gte : function(v1, v2) { return v1 >= v2; },
+      and : function() {
+	console.log(arguments);
+        return Array.prototype.slice.call(arguments).every(Boolean);
+      },
+      or : function() {
+        return Array.prototype.slice.call(arguments, 0, -1).map((x)=>x.length).some(Boolean);
+      }
     });
   }
 };
