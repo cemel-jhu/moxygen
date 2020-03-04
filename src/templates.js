@@ -92,13 +92,23 @@ module.exports = {
       gt : function(v1, v2) { return v1 > v2; },
       lte : function(v1, v2) { return v1 <= v2; },
       gte : function(v1, v2) { return v1 >= v2; },
+      isprodand: function(v) {
+        return (v != '' && process.env.PROD == 1) || process.env.PROD != 1;
+      },
       and : function() {
-	console.log(arguments);
-        return Array.prototype.slice.call(arguments).every(Boolean);
+        return Array.prototype.slice.call(arguments, 0, -1).map((x)=>x && x.length).every(Boolean);
       },
       or : function() {
         return Array.prototype.slice.call(arguments, 0, -1).map((x)=>x.length).some(Boolean);
       }
     });
+    /*
+    handlebars.registerHelper(
+        'trim_fn', function(name) {
+        if (options.language == "python")
+
+
+        });
+        */
   }
 };
