@@ -67,6 +67,9 @@ function toMarkdown(element, context) {
       case 'itemizedlist':
         s = '\n\n';
         break;
+      case 'dot':
+        s = "\n<div class='dot'>" + element._.replace(/\n[\n\s]+/g, '\n') + "</div>";
+        break;
       case 'listitem':
         s = (context.length > 0 &&
              context[context.length - 1]['#name'] == 'orderedlist')
@@ -127,6 +130,10 @@ function toMarkdown(element, context) {
         s = '<br/>';
         break;
 
+      case 'image':
+        s = "<img src='" + element.$.name + "'/>";
+        break;
+
       case 'xreftitle':
       case 'entry':
       case 'row':
@@ -144,11 +151,13 @@ function toMarkdown(element, context) {
         break;
 
       default:
+        console.log(element)
         console.error(false, element['#name'] + ': not yet supported.');
       }
 
       // recurse on children elements
       if (element.$$) {
+        if (element['#name'] != "dot")
         s += toMarkdown(element.$$, context);
       }
 
@@ -291,7 +300,7 @@ module.exports = {
     case 'function':
       if (memberdef.$.prot != "public") {
         m = m.concat(memberdef.$.prot, ' '); // public, private, ...
-        unclean = unclean.concat([m.length - 2, m.length - 1]);
+        unclean = unclean.concat([ m.length - 2, m.length - 1 ]);
       }
       if (memberdef.templateparamlist) {
         m.push('template<');
@@ -302,8 +311,8 @@ module.exports = {
             m = m.concat([ toMarkdown(param.type) ]);
             m = m.concat(param.declname ? [ ' ', toMarkdown(param.declname) ]
                                         : []);
-            if(param.declname){ 
-              unclean = unclean.concat([m.length - 2, m.length - 1]);
+            if (param.declname) {
+              unclean = unclean.concat([ m.length - 2, m.length - 1 ]);
             }
           });
         }
@@ -326,7 +335,8 @@ module.exports = {
             m = m.concat([ toMarkdown(param.type) ]);
             m = m.concat(param.declname ? [ ' ', toMarkdown(param.declname) ]
                                         : []);
-            if(param.declname) unclean = unclean.concat([m.length - 2, m.length - 1]);
+            if (param.declname)
+              unclean = unclean.concat([ m.length - 2, m.length - 1 ]);
           } else {
             var ptype =
                 (param.type[0]._ || "") + (param.array ? param.array[0]._ : "");
@@ -349,17 +359,16 @@ module.exports = {
                   param.declname ? [ ptype, toMarkdown(param.declname) ] : []);
 
             } else {
-              m = m.concat(param.declname
-                               ? [toMarkdown(param.declname), ' : ' ]
-                               : []);
-              if(param.declname) {
-                unclean = unclean.concat([m.length - 2, m.length - 1]);
+              m = m.concat(
+                  param.declname ? [ toMarkdown(param.declname), ' : ' ] : []);
+              if (param.declname) {
+                unclean = unclean.concat([ m.length - 2, m.length - 1 ]);
               }
               m = m.concat([ ptype ]);
             }
-            if (param.defval){
+            if (param.defval) {
               m = m.concat([ "=", param.defval[0]._ ]);
-              unclean = unclean.concat([m.length - 2, m.length - 1]);
+              unclean = unclean.concat([ m.length - 2, m.length - 1 ]);
             }
           }
         });
@@ -383,7 +392,7 @@ module.exports = {
     case 'variable':
       if (memberdef.$.prot != "public") {
         m = m.concat(memberdef.$.prot, ' '); // public, private, ...
-        unclean = unclean.concat([m.length - 2, m.length - 1]);
+        unclean = unclean.concat([ m.length - 2, m.length - 1 ]);
       }
       m = m.concat(memberdef.$.static == 'yes' ? [ 'static', ' ' ] : []);
       m = m.concat(memberdef.$.mutable == 'yes' ? [ 'mutable', ' ' ] : []);
@@ -424,7 +433,7 @@ module.exports = {
     }
 
     member.proto = helpers.inline(m);
-    member.cleaned = helpers.inline(m.filter((_, i)=>unclean.indexOf(i)<0));
+    member.cleaned = helpers.inline(m.filter((_, i) => unclean.indexOf(i) < 0));
     member.clean_name = member.name.replace(/\_/g, '\\_');
   },
 
