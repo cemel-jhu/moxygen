@@ -68,7 +68,8 @@ function toMarkdown(element, context) {
         s = '\n\n';
         break;
       case 'dot':
-        s = "\n<div class='dot'>" + element._.replace(/\n[\n\s]+/g, '\n') + "</div>";
+        s = "\n<div class='dot'>" + element._.replace(/\n[\n\s]+/g, '\n') +
+            "</div>";
         break;
       case 'listitem':
         s = (context.length > 0 &&
@@ -131,7 +132,11 @@ function toMarkdown(element, context) {
         break;
 
       case 'image':
-        s = "<img src='" + element.$.name + "'/>";
+        s = "<img src='" +
+            (process.env.PROD == 1 && element.$.name.split("$$").length == 1
+                 ? "/pd3/"
+                 : "/") +
+            element.$.name + "'/>";
         break;
 
       case 'xreftitle':
@@ -158,7 +163,7 @@ function toMarkdown(element, context) {
       // recurse on children elements
       if (element.$$) {
         if (element['#name'] != "dot")
-        s += toMarkdown(element.$$, context);
+          s += toMarkdown(element.$$, context);
       }
 
       // closing the element
