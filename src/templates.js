@@ -10,11 +10,13 @@ var fs = require('fs');
 var log = require('winston');
 var path = require('path');
 var handlebars = require('handlebars');
-// var tidyMarkdown = require('tidy-markdown');
+var marked = require('marked');
 
 var doxyparser = require('./parser');
 var helpers = require('./helpers');
 var markdown = require('./markdown');
+
+const REFREGEX = /(\{\#ref[^\}]+\})/g;
 
 module.exports = {
 
@@ -82,6 +84,12 @@ module.exports = {
     handlebars.registerHelper(
         'title', function(code) { return code.replace(/\n/g, '<br/>'); });
 
+    // to HTML
+    handlebars.registerHelper('html', function(text) {
+      var refs = text.match(REFREGEX), token = "#XXX", i = 0;
+      return ("" + marked(text.replace(REFREGEX, token))).replace(token, () => refs[i++])
+    });
+
     // Generate an anchor for internal links
     handlebars.registerHelper(
         'anchor', function(name) { return helpers.getAnchor(name, options); });
@@ -92,14 +100,18 @@ module.exports = {
       gt : function(v1, v2) { return v1 > v2; },
       lte : function(v1, v2) { return v1 <= v2; },
       gte : function(v1, v2) { return v1 >= v2; },
-      isprodand: function(v) {
+      isprodand : function(v) {
         return (v != '' && process.env.PROD == 1) || process.env.PROD != 1;
       },
       and : function() {
-        return Array.prototype.slice.call(arguments, 0, -1).map((x)=>x && x.length).every(Boolean);
+        return Array.prototype.slice.call(arguments, 0, -1)
+            .map((x) => x && x.length)
+            .every(Boolean);
       },
       or : function() {
-        return Array.prototype.slice.call(arguments, 0, -1).map((x)=>x.length).some(Boolean);
+        return Array.prototype.slice.call(arguments, 0, -1)
+            .map((x) => x.length)
+            .some(Boolean);
       }
     });
     /*
